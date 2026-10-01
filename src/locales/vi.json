@@ -53,7 +53,8 @@
     "particles": "hạt",
     "zoom": "zoom",
     "recording": "QUAY",
-    "voiceListening": "đang nghe"
+    "voiceListening": "đang nghe",
+    "cameraOn": "camera bật"
   },
   "help": {
     "title": "Điều khiển",
@@ -124,7 +125,10 @@
     "ready": "sẵn sàng",
     "forming": "đang hình thành",
     "exploding": "đang tách ra",
-    "assembling": "đang lắp lại"
+    "assembling": "đang lắp lại",
+    "sphere": "khối cầu",
+    "formed": "đã tạo hình",
+    "dissolve": "đang tan rã"
   },
   "poses": {
     "noHand": "không có tay",
@@ -133,7 +137,10 @@
     "pinch": "chụm",
     "point": "chỉ",
     "victory": "ngón V",
-    "twoHands": "hai tay"
+    "twoHands": "hai tay",
+    "none": "không có tay",
+    "peace": "chữ V",
+    "other": "đang di chuyển"
   },
   "guide": {
     "snap": "<b>Snap</b> — triệu hồi hạt / tan rã",

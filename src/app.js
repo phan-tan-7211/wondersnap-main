@@ -11,7 +11,7 @@ import { HandCamera } from './hands.js';
 import { hand as synthHand } from './logic/synth.js';
 import { rotX, rotY, matMul, matVec, deg } from './lib/vec.js';
 import { parseCommand, Voice, speak, Recorder } from './features.js';
-import { initI18n, t, setLocale, getCurrentLocale, onLocaleChange } from './i18n.js';
+import { initI18n, t, onLocaleChange } from './i18n.js';
 
 const qs = new URLSearchParams(location.search);
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
@@ -153,7 +153,11 @@ class App {
 
   onLocaleChange() {
     this.buildUI();
-    this.updateHud(this.t, 0);
+    this.lastIndexShown = -1;
+    this.guideKey = null;
+    delete this.$('statePill').dataset.state;
+    delete this.$('partCard').dataset.key;
+    this.updateHud(this.t, this.ctl.state.formT(this.t));
   }
 
   prefetch() { this.store.request((this.ctl.state.index + 1) % CATALOG.length); }
@@ -569,6 +573,7 @@ class App {
   // ------------------------------------------------------------ HUD
   buildUI() {
     const tabs = this.$('catTabs'), chips = this.$('catChips');
+    tabs.replaceChildren(); chips.replaceChildren();
     this.tabs = {}; this.chips = [];
     for (const c of CATEGORIES) {
       const b = document.createElement('button');
@@ -610,12 +615,12 @@ class App {
     clearTimeout(this._toastT); this._toastT = setTimeout(() => el.classList.remove('show'), 2200);
   }
 
-  updateHud(t, formT) {
+  updateHud(now, formT) {
     const st = this.ctl.state, def = CATALOG[st.index], $ = this.$, ctl = this.ctl;
     const isM = isMachine(st.index);
     if (this.lastIndexShown !== st.index) {
       this.lastIndexShown = st.index;
-      $('cat').textContent = def.category; $('name').textContent = def.name; $('fact').textContent = def.fact || '';
+      $('cat').textContent = t(`categories.${def.category.toLowerCase()}`); $('name').textContent = def.name; $('fact').textContent = def.fact || '';
       $('bigTitle').querySelector('.t').textContent = def.name; $('bigTitle').querySelector('.s').textContent = def.fact || '';
       $('explodeBox').hidden = !isM;
       this.chips.forEach((c, i) => c.classList.toggle('active', i === st.index));
@@ -624,10 +629,10 @@ class App {
     }
     const pill = $('statePill');
     if (pill.dataset.state !== st.state) { pill.dataset.state = st.state; pill.textContent = t(`states.${st.state}`); }
-    const vis = ctl.handVisible(t), pose = vis ? (ctl.pinch ? 'pinch' : ctl.pose) : NONE;
+    const vis = ctl.handVisible(now), pose = vis ? (ctl.pinch ? 'pinch' : ctl.pose) : NONE;
     const poseKey = pose === 'pinch' ? 'pinch' : pose;
     const [emo, label] = pose === 'pinch' ? ['🤏', t('poses.pinch')] : [POSE_UI[pose]?.[0] || '·', t(`poses.${poseKey}`)];
-    const pt = `${emo} ${label}${ctl.secondVisible(t) ? ' + 🖐' : ''}`;
+    const pt = `${emo} ${label}${ctl.secondVisible(now) ? ' + 🖐' : ''}`;
     if ($('posePill').textContent !== pt) $('posePill').textContent = pt;
     const op = vis ? ctl.openness : 0;
     $('openBar').style.width = `${Math.round(op * 100)}%`; $('openPct').textContent = `${Math.round(op * 100)}%`;
@@ -662,7 +667,7 @@ class App {
       qb.classList.toggle('good', q.feedback.startsWith('✅') || q.done);
       qb.classList.toggle('bad', q.feedback.startsWith('❌'));
     }
-    const cam = this.cam?.running ? `${t('toolbar.cameraOff')} <b>${this.cam.fps.toFixed(0)}</b> ${t('toolbar.fps')} · hands ${this.cam.delegate} ${this.cam.detectMs.toFixed(0)} ms` : t('toolbar.cameraOff');
+    const cam = this.cam?.running ? `${t('toolbar.cameraOn')} <b>${this.cam.fps.toFixed(0)}</b> ${t('toolbar.fps')} · hands ${this.cam.delegate} ${this.cam.detectMs.toFixed(0)} ms` : t('toolbar.cameraOff');
     const extra = [Math.abs(this.zoom - 1) > 0.02 ? `${t('toolbar.zoom')} <b>${this.zoom.toFixed(2)}×</b>` : '', this.recorder.on ? `<span class="rec">● ${t('toolbar.recording')} ${this.recorder.seconds().toFixed(0)} s</span>` : '', this.voiceOn ? `🎤 ${t('toolbar.voiceListening')}` : ''].filter(Boolean).join(' · ');
     $('stats').innerHTML = `<b>${this.fps.toFixed(0)}</b> ${t('toolbar.fps')} · <b>${(CFG.n / 1000).toFixed(0)}k</b> ${t('toolbar.particles')}<br>${cam}${extra ? '<br>' + extra : ''}`;
     for (const e of st.events.splice(0)) {
@@ -738,10 +743,6 @@ class App {
     $('bVoice').onclick = () => this.toggleVoice();
     $('bRec').onclick = () => this.toggleRecord();
     $('bHelp').onclick = () => { $('help').hidden = !$('help').hidden; };
-    // Locale selector
-    $('localeSelector').addEventListener('change', async (e) => {
-      await setLocale(e.target.value);
-    });
     $('partClose').onclick = () => this.deselect();
     $('partPull').onclick = () => { if (this.sel >= 0) this.pulled = !this.pulled; };
     $('partSpeak').onclick = () => { const L = this.model?.labels[this.sel]; if (L) { this.spoken.push(`${L.label}. ${L.info}.`); speak(`${L.label}. ${L.info}.`); } };
@@ -816,7 +817,7 @@ class App {
 }
 
 // ---------------------------------------------------------------- boot
-function boot() {
+async function boot() {
   let app;
   try { app = new App(); }
   catch (e) {
@@ -825,14 +826,15 @@ function boot() {
     document.getElementById('bStartCam').disabled = true; document.getElementById('bStartNoCam').disabled = true;
     return;
   }
-  app.init().then(() => {
+  await app.init();
+  {
     const start = document.getElementById('start');
     const hideStart = () => { start.hidden = true; };
     document.getElementById('bStartCam').onclick = async () => { if (await app.startCamera()) hideStart(); };
     document.getElementById('bStartNoCam').onclick = () => { hideStart(); app.toast(t('toast.keyboardHelp', { default: 'Keyboard: Space = snap · F = fist · O = open · E = explode · D = demo · H = help' })); };
     if (CFG.autostart === 'camera') { hideStart(); app.startCamera(); }
     else if (CFG.autostart === 'nocamera' || CFG.manual) hideStart();
-  });
+  }
 
   window.wonderSnap = {
     app, CATALOG, CFG, synth: synthHand,

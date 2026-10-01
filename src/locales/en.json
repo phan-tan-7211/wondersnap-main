@@ -53,7 +53,8 @@
     "particles": "particles",
     "zoom": "zoom",
     "recording": "REC",
-    "voiceListening": "listening"
+    "voiceListening": "listening",
+    "cameraOn": "camera on"
   },
   "help": {
     "title": "Controls",
@@ -124,7 +125,10 @@
     "ready": "ready",
     "forming": "forming",
     "exploding": "exploding",
-    "assembling": "assembling"
+    "assembling": "assembling",
+    "sphere": "sphere",
+    "formed": "formed",
+    "dissolve": "dissolving"
   },
   "poses": {
     "noHand": "no hand",
@@ -133,7 +137,10 @@
     "pinch": "pinch",
     "point": "point",
     "victory": "victory",
-    "twoHands": "two hands"
+    "twoHands": "two hands",
+    "none": "no hand",
+    "peace": "peace",
+    "other": "moving"
   },
   "guide": {
     "snap": "<b>Snap</b> — summon particles / dissolve",

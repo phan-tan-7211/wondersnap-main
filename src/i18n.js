@@ -4,7 +4,7 @@ const LOCALES = {
   vi: 'vi.json'
 };
 
-let currentLocale = 'en';
+let currentLocale = 'vi';
 let translations = {};
 let listeners = [];
 
@@ -19,7 +19,6 @@ async function loadLocale(locale) {
     translations = await response.json();
     currentLocale = locale;
     document.documentElement.lang = locale;
-    notifyListeners();
     return true;
   } catch (error) {
     console.error(`Failed to load locale ${locale}:`, error);
@@ -97,7 +96,7 @@ function applyTranslations() {
 }
 
 async function initI18n() {
-  const savedLocale = localStorage.getItem('wondersnap-locale') || 'en';
+  const savedLocale = localStorage.getItem('wondersnap-locale') || 'vi';
   await loadLocale(savedLocale);
   applyTranslations();
 
@@ -115,6 +114,7 @@ async function setLocale(locale) {
   if (success) {
     localStorage.setItem('wondersnap-locale', locale);
     applyTranslations();
+    notifyListeners();
   }
   return success;
 }
