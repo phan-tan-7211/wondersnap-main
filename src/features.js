@@ -1,3 +1,5 @@
+import { parseVietnameseCommand } from './i18n/voice-commands.js';
+
 // Voice control (Web Speech API), spoken part descriptions, session recording (MediaRecorder) and the
 // command parser that turns a sentence into app actions. Kept free of app state so it is easy to test.
 
@@ -22,6 +24,8 @@ const words = (s) => s.toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/).f
  * 'snap'|'dissolve'|'quiz'|'stopQuiz'|'cut'|'zoomIn'|'zoomOut'|'rotate'|'describe'|'record'}.
  */
 export function parseCommand(text, catalog, labels = []) {
+  const vietnamese = parseVietnameseCommand(text, catalog, labels);
+  if (vietnamese) return vietnamese;
   const t = ` ${words(text).join(' ')} `, has = (...ws) => ws.some((w) => t.includes(` ${w} `));
   const acts = [];
   if (has('stop quiz', 'end quiz', 'quit quiz')) return [{ type: 'stopQuiz' }];
@@ -55,31 +59,50 @@ export function parseCommand(text, catalog, labels = []) {
 
 /** Continuous speech recognition (Chrome / Edge: webkitSpeechRecognition). */
 export class Voice {
-  constructor(onText) {
+  constructor(onText, language = 'en-US') {
     this.SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
     this.supported = !!this.SR;
-    this.onText = onText; this.on = false; this.rec = null; this.last = '';
+    this.onText = onText; this.on = false; this.rec = null; this.last = ''; this.language = language;
   }
-  start() {
+  start(language = this.language) {
+    this.language = language;
     if (!this.SR) return false;
+    if (this.on && this.rec?.lang === language) return true;
+    this.stop();
     const rec = new this.SR();
-    rec.continuous = true; rec.interimResults = false; rec.lang = 'en-US';
-    rec.onresult = (e) => { const r = e.results[e.results.length - 1]; if (r.isFinal !== false) { this.last = r[0].transcript; this.onText(this.last); } };
-    rec.onend = () => { if (this.on) { try { rec.start(); } catch { /* already running */ } } };
-    rec.onerror = (e) => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') this.on = false; };
+    rec.continuous = true; rec.interimResults = false; rec.lang = this.language;
+    rec.onresult = (e) => { if (this.rec !== rec || !this.on) return; const r = e.results[e.results.length - 1]; if (r.isFinal !== false) { this.last = r[0].transcript; this.onText(this.last); } };
+    rec.onend = () => { if (this.on && this.rec === rec) { try { rec.start(); } catch { /* already running */ } } };
+    rec.onerror = (e) => { if (this.rec !== rec) return; if (e.error === 'not-allowed' || e.error === 'service-not-allowed') this.on = false; };
     this.rec = rec; this.on = true;
-    try { rec.start(); } catch { /* ignore double start */ }
+    try { rec.start(); } catch { this.on = false; return false; }
     return true;
   }
-  stop() { this.on = false; try { this.rec?.stop(); } catch { /* ignore */ } }
+  setLanguage(language) {
+    if (language === this.language) return;
+    const restart = this.on;
+    this.stop(); this.language = language;
+    if (restart) this.start();
+  }
+  stop() {
+    this.on = false;
+    const rec = this.rec; this.rec = null;
+    if (!rec) return;
+    rec.onend = null;
+    try { rec.stop(); } catch { /* already stopped */ }
+  }
 }
 
 /** Read text aloud (Speech Synthesis). Returns false when the browser has no voice output. */
-export function speak(text) {
+export function speak(text, language = 'en-US') {
   if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') return false;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  u.rate = 1.02; u.pitch = 1.0;
+  u.lang = language; u.rate = 1.02; u.pitch = 1.0;
+  const voices = window.speechSynthesis.getVoices?.() || [];
+  const voice = voices.find((v) => v.lang.toLowerCase() === language.toLowerCase())
+    || voices.find((v) => v.lang.toLowerCase().split('-')[0] === language.toLowerCase().split('-')[0]);
+  if (voice) u.voice = voice;
   window.speechSynthesis.speak(u);
   return true;
 }

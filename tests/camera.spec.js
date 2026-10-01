@@ -5,7 +5,7 @@ import { shot, status, watchErrors } from './helpers.js';
 
 test('camera + MediaPipe hand tracker run live on the webcam feed', async ({ page }) => {
   const noErrors = watchErrors(page);
-  await page.goto('/?autostart=camera&n=200000');
+  await page.goto('/?lang=en&autostart=camera&n=200000');
   await page.waitForFunction(() => window.wonderSnap?.status().camera?.running, null, { timeout: 90_000 });
   await page.waitForFunction(() => window.wonderSnap.status().camera.frames > 45, null, { timeout: 60_000 });
   let s = await status(page);
@@ -38,7 +38,7 @@ test('camera denied: friendly message and the app keeps working without it', asy
   const browser = await chromium.launch({ args: process.platform === 'win32' ? ['--use-angle=d3d11'] : [] });
   const context = await browser.newContext({ viewport: { width: 1600, height: 900 }, permissions: [] });
   const page = await context.newPage();
-  await page.goto(`${baseURL}/?n=100000`);
+  await page.goto(`${baseURL}/?lang=en&n=100000`);
   await page.click('#bStartCam');
   await expect(page.locator('#startMsg')).toContainText(/denied|No camera|Camera error/, { timeout: 30_000 });
   await shot(page, 'cam-d-permission-denied-message');
