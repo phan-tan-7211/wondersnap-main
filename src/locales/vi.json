@@ -1,0 +1,147 @@
+{
+  "app": {
+    "title": "WonderSnap",
+    "description": "Kỳ quan 3D, động cơ và xe hơi được điều khiển bằng cử chỉ tay, tạo từ các hạt GPU phát sáng.",
+    "brandName": "WonderSnap",
+    "brandSub": "snap · form · explode — bằng tay bạn"
+  },
+  "panel": {
+    "status": {
+      "scene": "Cảnh",
+      "hand": "Tay",
+      "handOpenness": "Độ mở tay",
+      "explodedView": "Chế độ tách ra",
+      "explodedHint": "Mở tay để tách ra · nắm tay để lắp lại"
+    },
+    "gestures": "Cử chỉ",
+    "buttons": {
+      "snap": "🫰 Snap",
+      "form": "✊ Hình thành",
+      "open": "✋ Thả ra",
+      "next": "✌ Tiếp theo"
+    }
+  },
+  "partCard": {
+    "close": "✕",
+    "pullOut": "🤏 Kéo ra",
+    "speak": "🔊 Đọc to",
+    "hint": "Chỉ ☝ vào bộ phận khác · chụm 🤏 để kéo bộ phận này ra",
+    "model": "{{name}} · bộ phận {{index}} / {{total}}"
+  },
+  "quiz": {
+    "stop": "✕",
+    "title": "Trắc nghiệm: tìm bộ phận",
+    "finished": "🎓 Trắc nghiệm kết thúc",
+    "find": "🎓 Tìm: {{label}}",
+    "getReady": "🎓 Chuẩn bị…",
+    "questionScore": "câu {{asked}} / {{total}} · điểm {{score}}",
+    "hint": "chỉ vào đó bằng một ngón (hoặc click vào)"
+  },
+  "toolbar": {
+    "camera": "📷 Bật/tắt camera (C)",
+    "labels": "🏷️ Nhãn bộ phận (L)",
+    "rotate": "⟳ Tự xoay (R)",
+    "handRotation": "🔄 Xoay bằng tay: vặn tay để xoay mô hình (G)",
+    "cutaway": "✂ Cắt ngang (X)",
+    "quiz": "🎓 Trắc nghiệm (Q)",
+    "voice": "🎤 Lệnh giọng nói + đọc to (M)",
+    "record": "⏺ Quay video (K)",
+    "demo": "▶ Chạy demo (D)",
+    "help": "? Trợ giúp phím tắt (H)",
+    "cameraOff": "camera tắt",
+    "fps": "fps",
+    "particles": "hạt",
+    "zoom": "zoom",
+    "recording": "QUAY",
+    "voiceListening": "đang nghe"
+  },
+  "help": {
+    "title": "Điều khiển",
+    "controls": {
+      "space": "Snap — triệu hồi / tan rã",
+      "fO": "Nắm tay (hình thành) / Mở tay (thả ra)",
+      "vArrows": "Mô hình tiếp theo / trước đó",
+      "eExploded": "Chế độ tách ra (động cơ & xe)",
+      "twistHand": "Xoay mô hình (giơ/hạ = nghiêng) · G bật/tắt",
+      "pointPinch": "Chọn bộ phận (hoặc click) · kéo ra",
+      "twoHands": "Zoom (cũng dùng + - 0, ctrl + cuộn)",
+      "xCut": "Lát cắt ngang (di chuyển tay / chuột)",
+      "qmkI": "Trắc nghiệm · giọng nói · quay video · mô tả bộ phận",
+      "drag": "Xoay mô hình",
+      "rlt": "Tự xoay · nhãn · vết đuôi",
+      "cdh": "Camera · demo · trợ giúp này"
+    }
+  },
+  "start": {
+    "title": "WonderSnap",
+    "description": "Các kỳ quan 3D phát sáng, cơ thể người (bộ não, tim đập, phổi thở, mắt, tai, xương…), DNA, một tế bào, động cơ, xe cộ và máy móc được tạo từ tới một चौth of a million hạt sáng — được điều khiển bởi tay bạn trước webcam.",
+    "steps": [
+      "<b>Snap</b> (rít ngón) để triệu hồi các hạt.",
+      "Nắm <b>tay</b> để hình thành kỳ quan, động cơ hoặc xe.",
+      "<b>Mở</b> tay: kỳ quan biến hình sang cái tiếp theo — cơ quan, động cơ và xe <b>tách ra</b> để hiển thị mọi bộ phận bên trong, được đặt tên kèm chức năng. Nắm tay để lắp lại.",
+      "<b>Vặn</b> tay để xoay mô hình, giơ hoặc hạ để nghiêng; <b>hai tay</b> để zoom.",
+      "<b>Chỉ</b> ☝ vào một bộ phận để biết chức năng, <b>chụm</b> 🤏 để kéo nó ra. Thử 🎓 trắc nghiệm, 🎤 giọng nói, ✂ cắt ngang và ⏺ quay video.",
+      "Hiện <b>✌</b> để chuyển sang mô hình tiếp theo."
+    ],
+    "buttons": {
+      "startCam": "Bắt đầu với camera",
+      "startNoCam": "Tiếp tục không dùng camera"
+    }
+  },
+  "toast": {
+    "cameraDenied": "Quyền truy cập camera bị từ chối. Vui lòng cho phép quyền camera.",
+    "cameraError": "Lỗi camera: ",
+    "modelLoaded": "Đã tải mô hình",
+    "voiceNotSupported": "Trình duyệt này không hỗ trợ giọng nói",
+    "recordingStarted": "Đang quay",
+    "recordingStopped": "Đã dừng quay",
+    "recordingSaved": "Đã lưu video",
+    "recordingError": "Lỗi quay video",
+    "snap": "🫰 Snap! Đã triệu hồi hạt",
+    "forming": "✊ Đang hình thành {{name}}",
+    "assembling": "✊ Đang lắp ráp: {{name}}",
+    "next": "✌ Tiếp theo: {{name}}",
+    "select": "→ {{name}}",
+    "dissolve": "💥 Đã tan rã",
+    "handRotation": "🔄 Xoay bằng tay {{state}}",
+    "cameraOn": "📷 Camera đã bật — hãy rít ngón!",
+    "cameraOff": "Camera đã tắt",
+    "noCamera": "Không tìm thấy camera — vẫn có thể dùng bàn phím, chuột và demo.",
+    "demoOn": "▶ Demo — tay ảo"
+  },
+  "categories": {
+    "wonders": "Kỳ quan",
+    "body": "Cơ thể",
+    "engines": "Động cơ",
+    "machines": "Máy móc",
+    "vehicles": "Xe cộ"
+  },
+  "states": {
+    "idle": "chờ",
+    "loading": "đang tải",
+    "ready": "sẵn sàng",
+    "forming": "đang hình thành",
+    "exploding": "đang tách ra",
+    "assembling": "đang lắp lại"
+  },
+  "poses": {
+    "noHand": "không có tay",
+    "open": "mở",
+    "fist": "nắm",
+    "pinch": "chụm",
+    "point": "chỉ",
+    "victory": "ngón V",
+    "twoHands": "hai tay"
+  },
+  "guide": {
+    "snap": "<b>Snap</b> — triệu hồi hạt / tan rã",
+    "fistMachine": "<b>Nắm tay</b> — lắp lại",
+    "fistWonder": "<b>Nắm tay</b> — hình thành kỳ quan",
+    "openMachine": "<b>Mở từ từ</b> — tách ra, xem bên trong",
+    "openWonder": "<b>Mở tay</b> — biến hình sang kỳ quan tiếp theo",
+    "twist": "<b>Vặn / giơ tay</b> — xoay & nghiêng",
+    "point": "<b>Chỉ</b> vào bộ phận để biết · <b>chụm</b> 🤏 kéo ra",
+    "zoom": "<b>Hai tay</b> xa / gần — zoom",
+    "peace": "<b>Ngón V</b> — chuyển mô hình tiếp theo"
+  }
+}

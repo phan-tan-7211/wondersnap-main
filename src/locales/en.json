@@ -1,0 +1,147 @@
+{
+  "app": {
+    "title": "WonderSnap",
+    "description": "Gesture-controlled 3D wonders, engines and cars made of glowing GPU particles.",
+    "brandName": "WonderSnap",
+    "brandSub": "snap · form · explode — with your hand"
+  },
+  "panel": {
+    "status": {
+      "scene": "Scene",
+      "hand": "Hand",
+      "handOpenness": "Hand openness",
+      "explodedView": "Exploded view",
+      "explodedHint": "Open your hand to pull it apart · close it to assemble"
+    },
+    "gestures": "Gestures",
+    "buttons": {
+      "snap": "🫰 Snap",
+      "form": "✊ Form",
+      "open": "✋ Release",
+      "next": "✌ Next"
+    }
+  },
+  "partCard": {
+    "close": "✕",
+    "pullOut": "🤏 Pull out",
+    "speak": "🔊 Read aloud",
+    "hint": "Point ☝ at another part · pinch 🤏 to pull this one out",
+    "model": "{{name}} · part {{index}} of {{total}}"
+  },
+  "quiz": {
+    "stop": "✕",
+    "title": "Quiz: find the part",
+    "finished": "🎓 Quiz finished",
+    "find": "🎓 Find: {{label}}",
+    "getReady": "🎓 Get ready…",
+    "questionScore": "question {{asked}} / {{total}} · score {{score}}",
+    "hint": "point at it with one finger (or click it)"
+  },
+  "toolbar": {
+    "camera": "📷 Camera on/off (C)",
+    "labels": "🏷️ Part labels (L)",
+    "rotate": "⟳ Auto-rotate (R)",
+    "handRotation": "🔄 Hand rotation: twist your hand to turn the model (G)",
+    "cutaway": "✂ Cut-away cross-section (X)",
+    "quiz": "🎓 Quiz: find the part (Q)",
+    "voice": "🎤 Voice commands + read aloud (M)",
+    "record": "⏺ Record a video (K)",
+    "demo": "▶ Play demo (D)",
+    "help": "? Keyboard help (H)",
+    "cameraOff": "camera off",
+    "fps": "fps",
+    "particles": "particles",
+    "zoom": "zoom",
+    "recording": "REC",
+    "voiceListening": "listening"
+  },
+  "help": {
+    "title": "Controls",
+    "controls": {
+      "space": "Snap — summon / dissolve",
+      "fO": "Fist (form) / Open hand (release)",
+      "vArrows": "Next / previous model",
+      "eExploded": "Exploded view (engines & car)",
+      "twistHand": "Rotate the model (raise / lower = tilt) · G on/off",
+      "pointPinch": "Pick a part (or click it) · pull it out",
+      "twoHands": "Zoom (also + - 0, ctrl + wheel)",
+      "xCut": "Cut-away slice (move hand / mouse)",
+      "qmkI": "Quiz · voice · record video · describe part",
+      "drag": "Rotate the model",
+      "rlt": "Auto-rotate · labels · trails",
+      "cdh": "Camera · demo · this help"
+    }
+  },
+  "start": {
+    "title": "WonderSnap",
+    "description": "Glowing 3D wonders, the human body (brain, beating heart, breathing lungs, eye, ear, skeleton…), DNA, a cell, engines, vehicles and machines made of up to a quarter-million light particles — controlled by your hand in front of the webcam.",
+    "steps": [
+      "<b>Snap</b> your fingers to summon the particles.",
+      "Make a <b>fist</b> to form a wonder, engine or car.",
+      "<b>Open</b> your hand: wonders morph to the next one — organs, engines and the car <b>explode</b> to show every part inside, named with what it does. Close your hand to put it back together.",
+      "<b>Twist</b> your hand to turn the model, raise or lower it to tilt; <b>two hands</b> zoom.",
+      "<b>Point</b> ☝ at a part to learn what it does, <b>pinch</b> 🤏 to pull it out. Try the 🎓 quiz, 🎤 voice, ✂ cut-away and ⏺ recording.",
+      "Show <b>✌</b> to jump to the next model."
+    ],
+    "buttons": {
+      "startCam": "Start with camera",
+      "startNoCam": "Continue without camera"
+    }
+  },
+  "toast": {
+    "cameraDenied": "Camera access denied. Please allow camera permission.",
+    "cameraError": "Camera error: ",
+    "modelLoaded": "Model loaded",
+    "voiceNotSupported": "Voice not supported in this browser",
+    "recordingStarted": "Recording started",
+    "recordingStopped": "Recording stopped",
+    "recordingSaved": "Recording saved",
+    "recordingError": "Recording error",
+    "snap": "🫰 Snap! Particles summoned",
+    "forming": "✊ Forming {{name}}",
+    "assembling": "✊ Assembling: {{name}}",
+    "next": "✌ Next: {{name}}",
+    "select": "→ {{name}}",
+    "dissolve": "💥 Dissolved",
+    "handRotation": "🔄 Hand rotation {{state}}",
+    "cameraOn": "📷 Camera on — snap your fingers!",
+    "cameraOff": "Camera off",
+    "noCamera": "No camera found — you can still use the keyboard, mouse and demo.",
+    "demoOn": "▶ Demo — synthetic hand"
+  },
+  "categories": {
+    "wonders": "Wonders",
+    "body": "Body",
+    "engines": "Engines",
+    "machines": "Machines",
+    "vehicles": "Vehicles"
+  },
+  "states": {
+    "idle": "idle",
+    "loading": "loading",
+    "ready": "ready",
+    "forming": "forming",
+    "exploding": "exploding",
+    "assembling": "assembling"
+  },
+  "poses": {
+    "noHand": "no hand",
+    "open": "open",
+    "fist": "fist",
+    "pinch": "pinch",
+    "point": "point",
+    "victory": "victory",
+    "twoHands": "two hands"
+  },
+  "guide": {
+    "snap": "<b>Snap</b> — summon particles / dissolve",
+    "fistMachine": "<b>Fist</b> — put it together",
+    "fistWonder": "<b>Fist</b> — form the wonder",
+    "openMachine": "<b>Open slowly</b> — explode it, see inside",
+    "openWonder": "<b>Open hand</b> — morph to the next wonder",
+    "twist": "<b>Twist / raise hand</b> — rotate & tilt it",
+    "point": "<b>Point</b> at a part to learn it · <b>pinch</b> 🤏 pulls it out",
+    "zoom": "<b>Two hands</b> apart / together — zoom",
+    "peace": "<b>Peace</b> — jump to the next model"
+  }
+}

@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>WonderSnap</title>
-  <meta name="description" content="Gesture-controlled 3D wonders, engines and cars made of glowing GPU particles.">
+  <title data-i18n="app.title">WonderSnap</title>
+  <meta name="description" data-i18n="app.description" content="Gesture-controlled 3D wonders, engines and cars made of glowing GPU particles.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%2366e0ff' stroke-width='4'/%3E%3Ccircle cx='32' cy='32' r='8' fill='%23ffd166'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -16,46 +16,46 @@
   <header class="brand">
     <div class="logo" aria-hidden="true"><span></span></div>
     <div>
-      <div class="brand-name">WonderSnap</div>
-      <div class="brand-sub">snap · form · explode — with your hand</div>
+      <div class="brand-name" data-i18n="app.brandName">WonderSnap</div>
+      <div class="brand-sub" data-i18n="app.brandSub">snap · form · explode — with your hand</div>
     </div>
   </header>
 
   <aside id="panel" class="panel glass">
     <section class="now">
-      <div class="cat" id="cat">Wonders</div>
+      <div class="cat" id="cat" data-i18n="categories.wonders">Wonders</div>
       <h1 id="name">Turtle Tower</h1>
       <p id="fact" class="fact"></p>
     </section>
 
     <section class="status">
       <div class="row">
-        <span class="k">Scene</span><span id="statePill" class="pill" data-state="idle">idle</span>
+        <span class="k" data-i18n="panel.status.scene">Scene</span><span id="statePill" class="pill" data-state="idle" data-i18n="states.idle">idle</span>
       </div>
       <div class="row">
-        <span class="k">Hand</span><span id="posePill" class="pill pose">no hand</span>
+        <span class="k" data-i18n="panel.status.hand">Hand</span><span id="posePill" class="pill pose" data-i18n="poses.noHand">no hand</span>
       </div>
       <div class="meter">
-        <div class="meter-head"><span class="k">Hand openness</span><b id="openPct">0%</b></div>
+        <div class="meter-head"><span class="k" data-i18n="panel.status.handOpenness">Hand openness</span><b id="openPct">0%</b></div>
         <div class="bar"><i id="openBar"></i></div>
       </div>
       <div id="explodeBox" class="meter explode" hidden>
-        <div class="meter-head"><span class="k">Exploded view</span><b id="explodePct">0%</b></div>
+        <div class="meter-head"><span class="k" data-i18n="panel.status.explodedView">Exploded view</span><b id="explodePct">0%</b></div>
         <input id="explodeSlider" type="range" min="0" max="100" value="0" aria-label="Exploded view amount">
-        <div class="hint">Open your hand to pull it apart · close it to assemble</div>
+        <div class="hint" data-i18n="panel.status.explodedHint">Open your hand to pull it apart · close it to assemble</div>
       </div>
     </section>
 
     <section>
-      <div class="k">Gestures</div>
+      <div class="k" data-i18n="panel.gestures">Gestures</div>
       <ul id="guide" class="guide"></ul>
     </section>
 
     <section class="buttons">
-      <button id="bSnap" title="Space">🫰 Snap</button>
-      <button id="bForm" title="F">✊ Form</button>
-      <button id="bOpen" title="O">✋ Release</button>
-      <button id="bNext" title="V / →">✌ Next</button>
+      <button id="bSnap" title="Space" data-i18n="panel.buttons.snap">🫰 Snap</button>
+      <button id="bForm" title="F" data-i18n="panel.buttons.form">✊ Form</button>
+      <button id="bOpen" title="O" data-i18n="panel.buttons.open">✋ Release</button>
+      <button id="bNext" title="V / →" data-i18n="panel.buttons.next">✌ Next</button>
     </section>
   </aside>
 
@@ -67,49 +67,53 @@
   </nav>
 
   <section id="partCard" class="part-card glass" hidden aria-live="polite">
-    <div class="phead"><i class="swatch"></i><span class="pname"></span><button id="partClose" class="x" title="Close (Esc)">✕</button></div>
+    <div class="phead"><i class="swatch"></i><span class="pname"></span><button id="partClose" class="x" title="Close (Esc)" data-i18n="partCard.close">✕</button></div>
     <div class="pinfo"></div>
     <div class="pmodel"></div>
-    <div class="pactions"><button id="partPull">🤏 Pull out</button><button id="partSpeak">🔊 Read aloud</button></div>
-    <div class="phint">Point ☝ at another part · pinch 🤏 to pull this one out</div>
+    <div class="pactions"><button id="partPull" data-i18n="partCard.pullOut">🤏 Pull out</button><button id="partSpeak" data-i18n="partCard.speak">🔊 Read aloud</button></div>
+    <div class="phint" data-i18n="partCard.hint">Point ☝ at another part · pinch 🤏 to pull this one out</div>
   </section>
 
   <section id="quiz" class="quiz glass" hidden aria-live="polite">
     <div class="q"></div><div class="qs"></div><div class="qf"></div>
-    <button id="quizStop" class="x" title="Stop quiz (Q)">✕</button>
+    <button id="quizStop" class="x" title="Stop quiz (Q)" data-i18n="quiz.stop">✕</button>
   </section>
 
   <div class="top-right">
     <div id="stats" class="stats glass"></div>
     <div class="icons">
-      <button id="bCam" class="icon" title="Camera on/off (C)">📷</button>
-      <button id="bLabels" class="icon on" title="Part labels (L)">🏷️</button>
-      <button id="bRotate" class="icon on" title="Auto-rotate (R)">⟳</button>
-      <button id="bHandRot" class="icon on" title="Hand rotation: twist your hand to turn the model (G)">🔄</button>
-      <button id="bCut" class="icon" title="Cut-away cross-section (X)">✂</button>
-      <button id="bQuiz" class="icon" title="Quiz: find the part (Q)">🎓</button>
-      <button id="bVoice" class="icon" title="Voice commands + read aloud (M)">🎤</button>
-      <button id="bRec" class="icon" title="Record a video (K)">⏺</button>
-      <button id="bDemo" class="icon" title="Play demo (D)">▶</button>
-      <button id="bHelp" class="icon" title="Keyboard help (H)">?</button>
+      <button id="bCam" class="icon" title="Camera on/off (C)" data-i18n-title="toolbar.camera">📷</button>
+      <button id="bLabels" class="icon on" title="Part labels (L)" data-i18n-title="toolbar.labels">🏷️</button>
+      <button id="bRotate" class="icon on" title="Auto-rotate (R)" data-i18n-title="toolbar.rotate">⟳</button>
+      <button id="bHandRot" class="icon on" title="Hand rotation: twist your hand to turn the model (G)" data-i18n-title="toolbar.handRotation">🔄</button>
+      <button id="bCut" class="icon" title="Cut-away cross-section (X)" data-i18n-title="toolbar.cutaway">✂</button>
+      <button id="bQuiz" class="icon" title="Quiz: find the part (Q)" data-i18n-title="toolbar.quiz">🎓</button>
+      <button id="bVoice" class="icon" title="Voice commands + read aloud (M)" data-i18n-title="toolbar.voice">🎤</button>
+      <button id="bRec" class="icon" title="Record a video (K)" data-i18n-title="toolbar.record">⏺</button>
+      <button id="bDemo" class="icon" title="Play demo (D)" data-i18n-title="toolbar.demo">▶</button>
+      <button id="bHelp" class="icon" title="Keyboard help (H)" data-i18n-title="toolbar.help">?</button>
+      <select id="localeSelector" class="locale-select" aria-label="Language">
+        <option value="en">English</option>
+        <option value="vi">Tiếng Việt</option>
+      </select>
     </div>
   </div>
 
   <div id="help" class="help glass" hidden>
-    <h2>Controls</h2>
+    <h2 data-i18n="help.title">Controls</h2>
     <table>
-      <tr><td><kbd>Space</kbd></td><td>Snap — summon / dissolve</td></tr>
-      <tr><td><kbd>F</kbd> / <kbd>O</kbd></td><td>Fist (form) / Open hand (release)</td></tr>
-      <tr><td><kbd>V</kbd> <kbd>→</kbd> <kbd>←</kbd></td><td>Next / previous model</td></tr>
-      <tr><td><kbd>E</kbd> <kbd>↑</kbd> <kbd>↓</kbd> wheel</td><td>Exploded view (engines &amp; car)</td></tr>
-      <tr><td>twist hand</td><td>Rotate the model (raise / lower = tilt) · <kbd>G</kbd> on/off</td></tr>
-      <tr><td>☝ point · 🤏 pinch</td><td>Pick a part (or click it) · pull it out</td></tr>
-      <tr><td>🙌 two hands</td><td>Zoom (also <kbd>+</kbd> <kbd>-</kbd> <kbd>0</kbd>, ctrl + wheel)</td></tr>
-      <tr><td><kbd>X</kbd> <kbd>,</kbd> <kbd>.</kbd></td><td>Cut-away slice (move hand / mouse)</td></tr>
-      <tr><td><kbd>Q</kbd> <kbd>M</kbd> <kbd>K</kbd> <kbd>I</kbd></td><td>Quiz · voice · record video · describe part</td></tr>
-      <tr><td>drag</td><td>Rotate the model</td></tr>
-      <tr><td><kbd>R</kbd> <kbd>L</kbd> <kbd>T</kbd></td><td>Auto-rotate · labels · trails</td></tr>
-      <tr><td><kbd>C</kbd> <kbd>D</kbd> <kbd>H</kbd></td><td>Camera · demo · this help</td></tr>
+      <tr><td><kbd>Space</kbd></td><td data-i18n="help.controls.space">Snap — summon / dissolve</td></tr>
+      <tr><td><kbd>F</kbd> / <kbd>O</kbd></td><td data-i18n="help.controls.fO">Fist (form) / Open hand (release)</td></tr>
+      <tr><td><kbd>V</kbd> <kbd>→</kbd> <kbd>←</kbd></td><td data-i18n="help.controls.vArrows">Next / previous model</td></tr>
+      <tr><td><kbd>E</kbd> <kbd>↑</kbd> <kbd>↓</kbd> wheel</td><td data-i18n="help.controls.eExploded">Exploded view (engines & car)</td></tr>
+      <tr><td>twist hand</td><td data-i18n="help.controls.twistHand">Rotate the model (raise / lower = tilt) · <kbd>G</kbd> on/off</td></tr>
+      <tr><td>☝ point · 🤏 pinch</td><td data-i18n="help.controls.pointPinch">Pick a part (or click it) · pull it out</td></tr>
+      <tr><td>🙌 two hands</td><td data-i18n="help.controls.twoHands">Zoom (also <kbd>+</kbd> <kbd>-</kbd> <kbd>0</kbd>, ctrl + wheel)</td></tr>
+      <tr><td><kbd>X</kbd> <kbd>,</kbd> <kbd>.</kbd></td><td data-i18n="help.controls.xCut">Cut-away slice (move hand / mouse)</td></tr>
+      <tr><td><kbd>Q</kbd> <kbd>M</kbd> <kbd>K</kbd> <kbd>I</kbd></td><td data-i18n="help.controls.qmkI">Quiz · voice · record video · describe part</td></tr>
+      <tr><td>drag</td><td data-i18n="help.controls.drag">Rotate the model</td></tr>
+      <tr><td><kbd>R</kbd> <kbd>L</kbd> <kbd>T</kbd></td><td data-i18n="help.controls.rlt">Auto-rotate · labels · trails</td></tr>
+      <tr><td><kbd>C</kbd> <kbd>D</kbd> <kbd>H</kbd></td><td data-i18n="help.controls.cdh">Camera · demo · this help</td></tr>
     </table>
   </div>
 
@@ -118,19 +122,19 @@
   <div id="start" class="start">
     <div class="start-card glass">
       <div class="logo big" aria-hidden="true"><span></span></div>
-      <h1>WonderSnap</h1>
-      <p>Glowing 3D wonders, the human body (brain, beating heart, breathing lungs, eye, ear, skeleton…), DNA, a cell, engines, vehicles and machines made of up to a quarter-million light particles — controlled by your hand in front of the webcam.</p>
+      <h1 data-i18n="start.title">WonderSnap</h1>
+      <p data-i18n="start.description">Glowing 3D wonders, the human body (brain, beating heart, breathing lungs, eye, ear, skeleton…), DNA, a cell, engines, vehicles and machines made of up to a quarter-million light particles — controlled by your hand in front of the webcam.</p>
       <ol class="steps">
-        <li><b>Snap</b> your fingers to summon the particles.</li>
-        <li>Make a <b>fist</b> to form a wonder, engine or car.</li>
-        <li><b>Open</b> your hand: wonders morph to the next one — organs, engines and the car <b>explode</b> to show every part inside, named with what it does. Close your hand to put it back together.</li>
-        <li><b>Twist</b> your hand to turn the model, raise or lower it to tilt; <b>two hands</b> zoom.</li>
-        <li><b>Point</b> ☝ at a part to learn what it does, <b>pinch</b> 🤏 to pull it out. Try the 🎓 quiz, 🎤 voice, ✂ cut-away and ⏺ recording.</li>
-        <li>Show <b>✌</b> to jump to the next model.</li>
+        <li data-i18n-html="start.steps.0"><b>Snap</b> your fingers to summon the particles.</li>
+        <li data-i18n-html="start.steps.1">Make a <b>fist</b> to form a wonder, engine or car.</li>
+        <li data-i18n-html="start.steps.2"><b>Open</b> your hand: wonders morph to the next one — organs, engines and the car <b>explode</b> to show every part inside, named with what it does. Close your hand to put it back together.</li>
+        <li data-i18n-html="start.steps.3"><b>Twist</b> your hand to turn the model, raise or lower it to tilt; <b>two hands</b> zoom.</li>
+        <li data-i18n-html="start.steps.4"><b>Point</b> ☝ at a part to learn what it does, <b>pinch</b> 🤏 to pull it out. Try the 🎓 quiz, 🎤 voice, ✂ cut-away and ⏺ recording.</li>
+        <li data-i18n-html="start.steps.5">Show <b>✌</b> to jump to the next model.</li>
       </ol>
       <div class="start-buttons">
-        <button id="bStartCam" class="primary">Start with camera</button>
-        <button id="bStartNoCam">Continue without camera</button>
+        <button id="bStartCam" class="primary" data-i18n="start.buttons.startCam">Start with camera</button>
+        <button id="bStartNoCam" data-i18n="start.buttons.startNoCam">Continue without camera</button>
       </div>
       <p id="startMsg" class="start-msg"></p>
     </div>

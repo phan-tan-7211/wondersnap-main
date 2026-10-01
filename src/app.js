@@ -11,6 +11,7 @@ import { HandCamera } from './hands.js';
 import { hand as synthHand } from './logic/synth.js';
 import { rotX, rotY, matMul, matVec, deg } from './lib/vec.js';
 import { parseCommand, Voice, speak, Recorder } from './features.js';
+import { initI18n, t, setLocale, getCurrentLocale, onLocaleChange } from './i18n.js';
 
 const qs = new URLSearchParams(location.search);
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
@@ -140,9 +141,21 @@ class App {
     this.gain = clamp(0.22 * Math.sqrt(250000 / CFG.n), 0.15, 0.6);
     this.resize();
     addEventListener('resize', () => this.resize());
+    this.initI18n();
     this.buildUI();
     this.bindInput();
     this.store.request(CFG.start).then(() => this.prefetch());
+  }
+
+  async initI18n() {
+    await initI18n();
+    // Listen for locale changes to rebuild UI
+    onLocaleChange(() => this.onLocaleChange());
+  }
+
+  onLocaleChange() {
+    this.buildUI();
+    this.updateHud(this.t, 0);
   }
 
   prefetch() { this.store.request((this.ctl.state.index + 1) % CATALOG.length); }
@@ -561,7 +574,8 @@ class App {
     this.tabs = {}; this.chips = [];
     for (const c of CATEGORIES) {
       const b = document.createElement('button');
-      b.className = 'tab'; b.textContent = `${c} · ${CATALOG.filter((d) => d.category === c).length}`; b.dataset.cat = c;
+      const translatedCat = t(`categories.${c.toLowerCase()}`) || c;
+      b.className = 'tab'; b.textContent = `${translatedCat} · ${CATALOG.filter((d) => d.category === c).length}`; b.dataset.cat = c;
       b.addEventListener('click', () => this.showCategory(c));
       tabs.appendChild(b); this.tabs[c] = b;
     }
@@ -582,13 +596,13 @@ class App {
 
   guideItems(machine) {
     return [
-      ['snap', '🫰', '<b>Snap</b> — summon particles / dissolve'],
-      ['fist', '✊', machine ? '<b>Fist</b> — put it together' : '<b>Fist</b> — form the wonder'],
-      ['open', '✋', machine ? '<b>Open slowly</b> — explode it, see inside' : '<b>Open hand</b> — morph to the next wonder'],
-      ['twist', '🔄', '<b>Twist / raise hand</b> — rotate & tilt it'],
-      ...(machine ? [['point', '☝', '<b>Point</b> at a part to learn it · <b>pinch</b> 🤏 pulls it out']] : []),
-      ['zoom', '🙌', '<b>Two hands</b> apart / together — zoom'],
-      ['peace', '✌', '<b>Peace</b> — jump to the next model'],
+      ['snap', '🫰', t('guide.snap', { default: '<b>Snap</b> — summon particles / dissolve' })],
+      ['fist', '✊', machine ? t('guide.fistMachine', { default: '<b>Fist</b> — put it together' }) : t('guide.fistWonder', { default: '<b>Fist</b> — form the wonder' })],
+      ['open', '✋', machine ? t('guide.openMachine', { default: '<b>Open slowly</b> — explode it, see inside' }) : t('guide.openWonder', { default: '<b>Open hand</b> — morph to the next wonder' })],
+      ['twist', '🔄', t('guide.twist', { default: '<b>Twist / raise hand</b> — rotate & tilt it' })],
+      ...(machine ? [['point', '☝', t('guide.point', { default: '<b>Point</b> at a part to learn it · <b>pinch</b> 🤏 pulls it out' })]] : []),
+      ['zoom', '🙌', t('guide.zoom', { default: '<b>Two hands</b> apart / together — zoom' })],
+      ['peace', '✌', t('guide.peace', { default: '<b>Peace</b> — jump to the next model' })],
     ];
   }
 
@@ -611,9 +625,10 @@ class App {
       this.guideKey = null;
     }
     const pill = $('statePill');
-    if (pill.dataset.state !== st.state) { pill.dataset.state = st.state; pill.textContent = st.state; }
+    if (pill.dataset.state !== st.state) { pill.dataset.state = st.state; pill.textContent = t(`states.${st.state}`); }
     const vis = ctl.handVisible(t), pose = vis ? (ctl.pinch ? 'pinch' : ctl.pose) : NONE;
-    const [emo, label] = pose === 'pinch' ? ['🤏', 'Pinch'] : POSE_UI[pose] || POSE_UI.other;
+    const poseKey = pose === 'pinch' ? 'pinch' : pose;
+    const [emo, label] = pose === 'pinch' ? ['🤏', t('poses.pinch')] : [POSE_UI[pose]?.[0] || '·', t(`poses.${poseKey}`)];
     const pt = `${emo} ${label}${ctl.secondVisible(t) ? ' + 🖐' : ''}`;
     if ($('posePill').textContent !== pt) $('posePill').textContent = pt;
     const op = vis ? ctl.openness : 0;
@@ -635,7 +650,7 @@ class App {
       card.querySelector('.swatch').style.background = rgbCss(L.color);
       card.querySelector('.pname').textContent = L.label;
       card.querySelector('.pinfo').textContent = L.info;
-      card.querySelector('.pmodel').textContent = `${def.name} · part ${this.sel + 1} of ${this.model.labels.length}`;
+      card.querySelector('.pmodel').textContent = t('partCard.model', { default: `{{name}} · part {{index}} of {{total}}`, name: def.name, index: this.sel + 1, total: this.model.labels.length });
     }
     card.classList.toggle('pulled', this.pulled);
     // quiz banner
@@ -643,22 +658,22 @@ class App {
     qb.hidden = !q;
     if (q) {
       const target = q.target >= 0 && this.model?.labels[q.target];
-      qb.querySelector('.q').textContent = q.done ? '🎓 Quiz finished' : target ? `🎓 Find: ${target.label}` : '🎓 Get ready…';
-      qb.querySelector('.qs').textContent = `question ${Math.max(q.asked, 1)} / ${q.total} · score ${q.score}`;
-      qb.querySelector('.qf').textContent = q.feedback || 'point at it with one finger (or click it)';
+      qb.querySelector('.q').textContent = q.done ? t('quiz.finished', { default: '🎓 Quiz finished' }) : target ? t('quiz.find', { default: `🎓 Find: {{label}}`, label: target.label }) : t('quiz.getReady', { default: '🎓 Get ready…' });
+      qb.querySelector('.qs').textContent = t('quiz.questionScore', { default: `question {{asked}} / {{total}} · score {{score}}`, asked: Math.max(q.asked, 1), total: q.total, score: q.score });
+      qb.querySelector('.qf').textContent = q.feedback || t('quiz.hint', { default: 'point at it with one finger (or click it)' });
       qb.classList.toggle('good', q.feedback.startsWith('✅') || q.done);
       qb.classList.toggle('bad', q.feedback.startsWith('❌'));
     }
-    const cam = this.cam?.running ? `cam <b>${this.cam.fps.toFixed(0)}</b> fps · hands ${this.cam.delegate} ${this.cam.detectMs.toFixed(0)} ms` : 'camera off';
-    const extra = [Math.abs(this.zoom - 1) > 0.02 ? `zoom <b>${this.zoom.toFixed(2)}×</b>` : '', this.recorder.on ? `<span class="rec">● REC ${this.recorder.seconds().toFixed(0)} s</span>` : '', this.voiceOn ? '🎤 listening' : ''].filter(Boolean).join(' · ');
-    $('stats').innerHTML = `<b>${this.fps.toFixed(0)}</b> fps · <b>${(CFG.n / 1000).toFixed(0)}k</b> particles<br>${cam}${extra ? '<br>' + extra : ''}`;
+    const cam = this.cam?.running ? `${t('toolbar.cameraOff')} <b>${this.cam.fps.toFixed(0)}</b> ${t('toolbar.fps')} · hands ${this.cam.delegate} ${this.cam.detectMs.toFixed(0)} ms` : t('toolbar.cameraOff');
+    const extra = [Math.abs(this.zoom - 1) > 0.02 ? `${t('toolbar.zoom')} <b>${this.zoom.toFixed(2)}×</b>` : '', this.recorder.on ? `<span class="rec">● ${t('toolbar.recording')} ${this.recorder.seconds().toFixed(0)} s</span>` : '', this.voiceOn ? `🎤 ${t('toolbar.voiceListening')}` : ''].filter(Boolean).join(' · ');
+    $('stats').innerHTML = `<b>${this.fps.toFixed(0)}</b> ${t('toolbar.fps')} · <b>${(CFG.n / 1000).toFixed(0)}k</b> ${t('toolbar.particles')}<br>${cam}${extra ? '<br>' + extra : ''}`;
     for (const e of st.events.splice(0)) {
       const name = CATALOG[st.index].name;
-      if (e === 'snap') this.toast('🫰 Snap! Particles summoned');
-      else if (e === 'form') this.toast(isM ? `✊ Assembling: ${name}` : `✊ Forming ${name}`);
-      else if (e === 'next') this.toast(`✌ Next: ${name}`);
-      else if (e === 'select') this.toast(`→ ${name}`);
-      else if (e === 'dissolve') this.toast('💥 Dissolved');
+      if (e === 'snap') this.toast(t('toast.snap', { default: '🫰 Snap! Particles summoned' }));
+      else if (e === 'form') this.toast(isM ? t('toast.assembling', { default: `✊ Assembling: ${name}`, name }) : t('toast.forming', { default: `✊ Forming ${name}`, name }));
+      else if (e === 'next') this.toast(t('toast.next', { default: `✌ Next: ${name}`, name }));
+      else if (e === 'select') this.toast(t('toast.select', { default: `→ ${name}`, name }));
+      else if (e === 'dissolve') this.toast(t('toast.dissolve', { default: '💥 Dissolved' }));
     }
   }
 
@@ -700,7 +715,7 @@ class App {
       else if (k === 'i') this.voiceCommand('what is this');
       else if (k === 'escape') { if (this.quiz) this.stopQuiz(); this.deselect(); }
       else if (k === 'r') this.toggle('autoRotate', 'bRotate');
-      else if (k === 'g') { this.toggle('handRotate', 'bHandRot'); this.toast(`🔄 Hand rotation ${this.handRotate ? 'on' : 'off'}`); }
+      else if (k === 'g') { this.toggle('handRotate', 'bHandRot'); this.toast(t('toast.handRotation', { default: `🔄 Hand rotation ${this.handRotate ? 'on' : 'off'}`, state: this.handRotate ? 'on' : 'off' })); }
       else if (k === 'l') this.toggle('labelsOn', 'bLabels');
       else if (k === 't') this.trails = !this.trails;
       else if (k === 'c') this.toggleCamera();
@@ -725,6 +740,10 @@ class App {
     $('bVoice').onclick = () => this.toggleVoice();
     $('bRec').onclick = () => this.toggleRecord();
     $('bHelp').onclick = () => { $('help').hidden = !$('help').hidden; };
+    // Locale selector
+    $('localeSelector').addEventListener('change', async (e) => {
+      await setLocale(e.target.value);
+    });
     $('partClose').onclick = () => this.deselect();
     $('partPull').onclick = () => { if (this.sel >= 0) this.pulled = !this.pulled; };
     $('partSpeak').onclick = () => { const L = this.model?.labels[this.sel]; if (L) { this.spoken.push(`${L.label}. ${L.info}.`); speak(`${L.label}. ${L.info}.`); } };
@@ -764,21 +783,21 @@ class App {
       this.cam = this.cam || new HandCamera(this.video);
       await this.cam.start((s) => { msg.textContent = s; if (s) this.toast(s); });
       this.camOn = true; this.$('bCam').classList.add('on');
-      this.toast('📷 Camera on — snap your fingers!');
+      this.toast(t('toast.cameraOn', { default: '📷 Camera on — snap your fingers!' }));
       return true;
     } catch (e) {
       console.error(e);
-      const text = e.name === 'NotAllowedError' ? 'Camera permission was denied — you can still use the keyboard, mouse and demo.'
-        : e.name === 'NotFoundError' ? 'No camera found — you can still use the keyboard, mouse and demo.' : `Camera error: ${e.message}`;
+      const text = e.name === 'NotAllowedError' ? t('toast.cameraDenied', { default: 'Camera permission was denied — you can still use the keyboard, mouse and demo.' })
+        : e.name === 'NotFoundError' ? t('toast.noCamera', { default: 'No camera found — you can still use the keyboard, mouse and demo.' }) : t('toast.cameraError', { default: `Camera error: ${e.message}` });
       msg.textContent = text; this.toast(text);
       this.cam?.stop(); this.cam = null; this.camOn = false;
       return false;
     }
   }
-  stopCamera() { this.cam?.stop(); this.cam = null; this.camOn = false; this.hasVideo = false; this.$('bCam').classList.remove('on'); this.toast('Camera off'); }
+  stopCamera() { this.cam?.stop(); this.cam = null; this.camOn = false; this.hasVideo = false; this.$('bCam').classList.remove('on'); this.toast(t('toast.cameraOff', { default: 'Camera off' })); }
   toggleCamera() { if (this.camOn) this.stopCamera(); else this.startCamera(); }
 
-  toggleDemo() { if (this.demo) this.stopDemo(); else { this.demo = new Demo(this); this.$('bDemo').classList.add('on'); this.toast('▶ Demo — synthetic hand'); } }
+  toggleDemo() { if (this.demo) this.stopDemo(); else { this.demo = new Demo(this); this.$('bDemo').classList.add('on'); this.toast(t('toast.demoOn', { default: '▶ Demo — synthetic hand' })); } }
   stopDemo() { if (!this.demo) return; this.demo = null; this.demoHand = undefined; this.$('bDemo').classList.remove('on'); this.ctl.onHands([], this.t); }
 
   // ------------------------------------------------------------ deterministic stepping (tests)
