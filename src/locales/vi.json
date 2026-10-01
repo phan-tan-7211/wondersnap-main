@@ -107,11 +107,13 @@
     "cameraOn": "📷 Camera đã bật — hãy rít ngón!",
     "cameraOff": "Camera đã tắt",
     "noCamera": "Không tìm thấy camera — vẫn có thể dùng bàn phím, chuột và demo.",
-    "demoOn": "▶ Demo — tay ảo"
+    "demoOn": "▶ Demo — tay ảo",
+    "keyboardHelp": "Bàn phím: Space = snap · F = nắm · O = mở · E = tách · D = demo · H = trợ giúp"
   },
   "categories": {
     "wonders": "Kỳ quan",
-    "body": "Cơ thể",
+    "anatomy": "Giải phẫu",
+    "biology": "Sinh học",
     "engines": "Động cơ",
     "machines": "Máy móc",
     "vehicles": "Xe cộ"

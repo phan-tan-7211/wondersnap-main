@@ -141,16 +141,14 @@ class App {
     this.gain = clamp(0.22 * Math.sqrt(250000 / CFG.n), 0.15, 0.6);
     this.resize();
     addEventListener('resize', () => this.resize());
-    this.initI18n();
-    this.buildUI();
-    this.bindInput();
     this.store.request(CFG.start).then(() => this.prefetch());
   }
 
-  async initI18n() {
+  async init() {
     await initI18n();
-    // Listen for locale changes to rebuild UI
     onLocaleChange(() => this.onLocaleChange());
+    this.buildUI();
+    this.bindInput();
   }
 
   onLocaleChange() {
@@ -827,12 +825,14 @@ function boot() {
     document.getElementById('bStartCam').disabled = true; document.getElementById('bStartNoCam').disabled = true;
     return;
   }
-  const start = document.getElementById('start');
-  const hideStart = () => { start.hidden = true; };
-  document.getElementById('bStartCam').onclick = async () => { if (await app.startCamera()) hideStart(); };
-  document.getElementById('bStartNoCam').onclick = () => { hideStart(); app.toast('Keyboard: Space = snap · F = fist · O = open · E = explode · D = demo · H = help'); };
-  if (CFG.autostart === 'camera') { hideStart(); app.startCamera(); }
-  else if (CFG.autostart === 'nocamera' || CFG.manual) hideStart();
+  app.init().then(() => {
+    const start = document.getElementById('start');
+    const hideStart = () => { start.hidden = true; };
+    document.getElementById('bStartCam').onclick = async () => { if (await app.startCamera()) hideStart(); };
+    document.getElementById('bStartNoCam').onclick = () => { hideStart(); app.toast(t('toast.keyboardHelp', { default: 'Keyboard: Space = snap · F = fist · O = open · E = explode · D = demo · H = help' })); };
+    if (CFG.autostart === 'camera') { hideStart(); app.startCamera(); }
+    else if (CFG.autostart === 'nocamera' || CFG.manual) hideStart();
+  });
 
   window.wonderSnap = {
     app, CATALOG, CFG, synth: synthHand,

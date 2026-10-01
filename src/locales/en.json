@@ -107,11 +107,13 @@
     "cameraOn": "📷 Camera on — snap your fingers!",
     "cameraOff": "Camera off",
     "noCamera": "No camera found — you can still use the keyboard, mouse and demo.",
-    "demoOn": "▶ Demo — synthetic hand"
+    "demoOn": "▶ Demo — synthetic hand",
+    "keyboardHelp": "Keyboard: Space = snap · F = fist · O = open · E = explode · D = demo · H = help"
   },
   "categories": {
     "wonders": "Wonders",
-    "body": "Body",
+    "anatomy": "Anatomy",
+    "biology": "Biology",
     "engines": "Engines",
     "machines": "Machines",
     "vehicles": "Vehicles"
