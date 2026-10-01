@@ -11,6 +11,7 @@ import { HandCamera } from './hands.js';
 import { hand as synthHand } from './logic/synth.js';
 import { rotX, rotY, matMul, matVec, deg } from './lib/vec.js';
 import { parseCommand, Voice, speak, Recorder } from './features.js';
+import { initI18n, getLocale, setLocale, onLocaleChange, speechLocale, t as tr, html, content, number, escapeHTML } from './i18n/index.js';
 
 const qs = new URLSearchParams(location.search);
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
@@ -32,7 +33,7 @@ const CFG = {
 
 const HAND_EDGES = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8], [5, 9], [9, 10], [10, 11], [11, 12],
   [9, 13], [13, 14], [14, 15], [15, 16], [13, 17], [17, 18], [18, 19], [19, 20], [0, 17]];
-const POSE_UI = { [OPEN]: ['✋', 'Open hand'], [FIST]: ['✊', 'Fist'], [PEACE]: ['✌', 'Peace'], [POINT]: ['☝', 'Pointing'], other: ['🤚', 'Moving'], [NONE]: ['·', 'No hand'] };
+const POSE_UI = { [OPEN]: ['✋', 'pose.open'], [FIST]: ['✊', 'pose.fist'], [PEACE]: ['✌', 'pose.peace'], [POINT]: ['☝', 'pose.point'], other: ['🤚', 'pose.other'], [NONE]: ['·', 'pose.none'] };
 const POSE_COLOR = { [OPEN]: '#66e0ff', [FIST]: '#ffd166', [PEACE]: '#ff6bd6', [POINT]: '#7dff9b', other: '#e8f1ff', [NONE]: '#e8f1ff' };
 const rgbCss = (c, a = 1) => `rgba(${Math.round(c[0] * 255)}, ${Math.round(c[1] * 255)}, ${Math.round(c[2] * 255)}, ${a})`;
 const CATEGORIES = [...new Set(CATALOG.map((d) => d.category))];
@@ -131,7 +132,7 @@ class App {
     this.sel = -1; this.pulled = false; this.pullAmt = 0; this.hover = { li: -1, t0: 0 }; this.anchors = []; this.pointer = null; this.lostT = 0;
     this.quiz = null;
     this.cut = { on: false, x: 0.35, target: 0.35 };
-    this.voice = new Voice((text) => this.voiceCommand(text)); this.voiceOn = false; this.spoken = []; this.lastHeard = '';
+    this.voice = new Voice((text) => this.voiceCommand(text), speechLocale()); this.voiceOn = false; this.spoken = []; this.lastHeard = '';
     this.recorder = new Recorder(this.canvas, this.overlay); this.lastRecording = null;
     this.t = 0; this.last = null; this.frames = 0; this.fps = 0; this._fpsN = 0; this._fpsT = 0;
     this.handSource = null; this.handSource2 = null; this.lastSynthT = -1; this.demo = null; this.demoHand = undefined;
@@ -142,7 +143,36 @@ class App {
     addEventListener('resize', () => this.resize());
     this.buildUI();
     this.bindInput();
+    onLocaleChange(() => this.refreshLanguage());
     this.store.request(CFG.start).then(() => this.prefetch());
+  }
+
+  refreshLanguage() {
+    for (const [category, button] of Object.entries(this.tabs)) {
+      button.textContent = `${content(category)} · ${CATALOG.filter((d) => d.category === category).length}`;
+    }
+    this.chips.forEach((button, i) => { button.lastChild.textContent = content(CATALOG[i].name); });
+    this.lastIndexShown = -1; this.guideKey = null;
+    delete this.$('partCard').dataset.key;
+    this.voice.setLanguage(speechLocale());
+    window.speechSynthesis?.cancel();
+    this.$('toast').classList.remove('show');
+    if (this.startMessage) this.$('startMsg').textContent = tr(this.startMessage.key, this.startMessage.params);
+    this.refreshQuizFeedback();
+    this.updateHud(this.t, this.ctl.state.formT(this.t));
+    // Canvas labels refresh on the next render; no physics/camera/model reset is needed.
+  }
+
+  refreshQuizFeedback() {
+    const q = this.quiz;
+    if (!q) return;
+    if (q.done) q.feedback = tr('quiz.score', q);
+    else if (q.answer != null && this.model) {
+      const L = this.model.labels, answer = L[q.answer], target = L[q.target];
+      if (answer && target) q.feedback = q.answer === q.target
+        ? tr('quiz.correct', { name: content(answer.label), info: content(answer.info) })
+        : tr('quiz.wrong', { name: content(answer.label), target: content(target.label) });
+    }
   }
 
   prefetch() { this.store.request((this.ctl.state.index + 1) % CATALOG.length); }
@@ -337,7 +367,7 @@ class App {
     } else this.hover = { li: -1, t0: t };
     if (ctl.pinchStart) {
       ctl.pinchStart = false;
-      if (this.sel >= 0) { this.pulled = !this.pulled; this.toast(this.pulled ? `🤏 Pulled out: ${this.model.labels[this.sel].label}` : '🤏 Put back'); }
+      if (this.sel >= 0) { this.pulled = !this.pulled; this.toast(this.pulled ? tr('part.pulled', { name: content(this.model.labels[this.sel].label) }) : tr('part.putBack')); }
     }
   }
   selectPart(li, source = 'click') {
@@ -345,11 +375,11 @@ class App {
     if (this.quiz && !this.quiz.done && this.quiz.phase === 'ask') { this.answerQuiz(li); return; }
     this.sel = li; this.pulled = false;
     const L = this.model.labels[li];
-    this.say(`${L.label}. ${L.info}.`);
-    this.toast(`☝ ${L.label} — ${L.info}`);
+    this.say(`${content(L.label)}. ${content(L.info)}.`);
+    this.toast(`☝ ${content(L.label)} — ${content(L.info)}`);
   }
   deselect() { this.sel = -1; this.pulled = false; }
-  say(text) { this.spoken.push(text); if (this.voiceOn) speak(text); }
+  say(text) { this.spoken.push(text); if (this.voiceOn) speak(text, speechLocale()); }
 
   // ------------------------------------------------------------ quiz: "find the hippocampus"
   startQuiz() {
@@ -358,7 +388,7 @@ class App {
     else if (st.state !== FORMED) this.selectModel(st.index);
     this.quiz = { pending: true, total: QUIZ_LEN, asked: 0, score: 0, target: -1, phase: 'wait', nextAt: 0, done: false, feedback: '', seed: this.frames };
     this.manualExplode = 1;
-    this.toast('🎓 Quiz: point at the part I name');
+    this.toast(tr('quiz.start'));
   }
   stopQuiz() { this.quiz = null; this.deselect(); }
   updateQuiz(t, ready) {
@@ -379,21 +409,21 @@ class App {
     this.deselect();
     if (q.asked >= q.total) {
       q.done = true; q.phase = 'done'; q.nextAt = this.t;
-      q.feedback = `🏆 Score ${q.score} / ${q.total}`;
-      this.say(`Quiz finished. You scored ${q.score} out of ${q.total}.`);
+      this.refreshQuizFeedback();
+      this.say(tr('quiz.result', q));
       return;
     }
-    q.target = q.order[q.asked % q.order.length]; q.asked++; q.phase = 'ask'; q.feedback = '';
-    this.say(`Find the ${this.model.labels[q.target].label}`);
+    q.target = q.order[q.asked % q.order.length]; q.asked++; q.phase = 'ask'; q.feedback = ''; q.answer = null;
+    this.say(tr('quiz.ask', { name: content(this.model.labels[q.target].label) }));
   }
   answerQuiz(li) {
     const q = this.quiz, L = this.model.labels;
     const ok = li === q.target;
     if (ok) q.score++;
     q.phase = 'feedback'; q.nextAt = this.t + 1.8;
-    q.feedback = ok ? `✅ Correct! ${L[li].label}: ${L[li].info}` : `❌ That's the ${L[li].label}. Here is the ${L[q.target].label}.`;
+    q.answer = li; this.refreshQuizFeedback();
     this.sel = q.target;                                                // reveal the right answer
-    this.say(ok ? `Correct! ${L[li].info}` : `No, that's the ${L[li].label}.`);
+    this.say(ok ? tr('quiz.sayCorrect', { info: content(L[li].info) }) : tr('quiz.sayWrong', { name: content(L[li].label) }));
   }
 
   // ------------------------------------------------------------ voice
@@ -419,27 +449,27 @@ class App {
       else if (a.type === 'record') { this.toggleRecord(); done.push('record'); }
       else if (a.type === 'describe') {
         const L = this.sel >= 0 && this.model?.labels[this.sel];
-        this.say(L ? `${L.label}. ${L.info}.` : `${CATALOG[st.index].name}. ${CATALOG[st.index].fact || ''}`); done.push('describe');
+        this.say(L ? `${content(L.label)}. ${content(L.info)}.` : `${content(CATALOG[st.index].name)}. ${content(CATALOG[st.index].fact)}`); done.push('describe');
       }
     }
-    this.toast(`🎤 “${text}”${done.length ? ' → ' + done.join(', ') : ' (not understood)'}`);
+    this.toast(`🎤 “${text}”${done.length ? ' → ' + done.map((item) => tr('action.' + item) === 'action.' + item ? content(item) : tr('action.' + item)).join(', ') : tr('voice.unknown')}`);
     return done;
   }
   toggleVoice() {
-    if (this.voiceOn) { this.voice.stop(); this.voiceOn = false; this.toast('🎤 Voice off'); }
+    if (this.voiceOn) { this.voice.stop(); this.voiceOn = false; this.toast(tr('voice.off')); }
     else {
       this.voiceOn = true;
-      const ok = this.voice.start();
-      this.toast(ok ? '🎤 Listening: say “show me the heart”, “explode”, “next”, “quiz”…' : '🎤 Speech recognition is not available here: parts are still read aloud');
+      const ok = this.voice.start(speechLocale());
+      this.toast(ok ? tr('voice.listening') : tr('voice.unavailable'));
     }
     this.$('bVoice').classList.toggle('on', this.voiceOn);
   }
 
   // ------------------------------------------------------------ cut-away + recording
-  toggleCut() { this.cut.on = !this.cut.on; this.$('bCut').classList.toggle('on', this.cut.on); this.toast(this.cut.on ? '✂ Cut-away: move your hand (or the mouse) left / right' : '✂ Cut-away off'); }
+  toggleCut() { this.cut.on = !this.cut.on; this.$('bCut').classList.toggle('on', this.cut.on); this.toast(this.cut.on ? tr('cut.on') : tr('cut.off')); }
   async toggleRecord() {
-    if (!Recorder.supported()) { this.toast('Recording is not supported in this browser'); return; }
-    if (!this.recorder.on) { this.recorder.start(); this.$('bRec').classList.add('on'); this.toast('⏺ Recording…'); return; }
+    if (!Recorder.supported()) { this.toast(tr('record.unsupported')); return; }
+    if (!this.recorder.on) { this.recorder.start(); this.$('bRec').classList.add('on'); this.toast(tr('record.start')); return; }
     const blob = await this.recorder.stop();
     this.$('bRec').classList.remove('on');
     if (!blob) return;
@@ -449,7 +479,7 @@ class App {
     a.download = `wondersnap-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.webm`;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-    this.toast(`💾 Saved ${(blob.size / 1e6).toFixed(1)} MB video`);
+    this.toast(tr('record.saved', { size: number(blob.size / 1e6, 1) }));
   }
 
   // ------------------------------------------------------------ overlay: hands, pointer, labels
@@ -496,7 +526,7 @@ class App {
         g.shadowBlur = 0; g.setLineDash([6 * dpr, 6 * dpr]); g.strokeStyle = '#b69cff'; g.globalAlpha = 0.8; g.lineWidth = 2 * dpr;
         g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke(); g.setLineDash([]);
         g.fillStyle = '#e8dcff'; g.font = `700 ${13 * dpr}px ui-sans-serif, system-ui, sans-serif`; g.textAlign = 'center';
-        g.fillText(`🔍 zoom ${this.zoom.toFixed(2)}×`, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2 - 12 * dpr);
+        g.fillText(tr('overlay.zoom', { zoom: number(this.zoom, 2) }), (a[0] + b[0]) / 2, (a[1] + b[1]) / 2 - 12 * dpr);
       }
       g.shadowBlur = 0; g.globalAlpha = 1;
     }
@@ -517,7 +547,7 @@ class App {
       g.strokeStyle = '#ffffff'; g.globalAlpha = 0.5; g.setLineDash([8 * dpr, 6 * dpr]); g.lineWidth = 1.5 * dpr;
       g.beginPath(); g.moveTo(x, cy - rr * 1.1); g.lineTo(x, cy + rr * 1.1); g.stroke(); g.setLineDash([]);
       g.globalAlpha = 0.9; g.fillStyle = '#fff'; g.font = `600 ${12 * dpr}px ui-sans-serif, system-ui, sans-serif`; g.textAlign = 'center';
-      g.fillText('✂ cross-section', x, cy - rr * 1.1 - 8 * dpr); g.globalAlpha = 1;
+      g.fillText(tr('cut.label'), x, cy - rr * 1.1 - 8 * dpr); g.globalAlpha = 1;
     }
     if (!this.anchors.length) return;
     const showAll = this.labelsOn && this.explode > 0.15;
@@ -537,9 +567,11 @@ class App {
       const over = col.length ? col[col.length - 1].ly - (H - 130 * dpr) : 0;
       if (over > 0) col.forEach((it) => { it.ly -= over; });
       for (const it of col) {
-        const L = it.L, selected = it.li === this.sel, info = L.info;
-        g.font = big; let tw = g.measureText(L.label).width;
+        const L = it.L, selected = it.li === this.sel, info = content(L.info), label = content(L.label);
+        g.font = big; let tw = g.measureText(label).width;
         if (info) { g.font = small; tw = Math.max(tw, g.measureText(info).width); }
+        const textLimit = Math.max(80 * dpr, Math.min(430 * dpr, W * 0.42));
+        tw = Math.min(tw, textLimit);
         const lx = side > 0 ? Math.min(cx + rr + 24 * dpr, W - tw - 16 * dpr) : Math.max(cx - rr - 24 * dpr, tw + 16 * dpr);
         const a = selected ? 1 : this.sel >= 0 ? alpha * 0.45 : alpha;
         g.globalAlpha = a * 0.6; g.strokeStyle = rgbCss(L.color); g.lineWidth = (selected ? 2 : 1) * dpr;
@@ -548,8 +580,8 @@ class App {
         g.beginPath(); g.arc(it.px, it.py, (selected ? 5 : 3) * dpr, 0, Math.PI * 2); g.fill();
         if (selected) { g.strokeStyle = '#fff'; g.lineWidth = 2 * dpr; g.beginPath(); g.arc(it.px, it.py, 11 * dpr, 0, Math.PI * 2); g.stroke(); }
         g.font = big; g.fillStyle = selected ? '#ffffff' : '#eef6ff'; g.textAlign = side > 0 ? 'left' : 'right';
-        g.fillText(L.label, lx + side * 4 * dpr, info ? it.ly - 7 * dpr : it.ly);
-        if (info) { g.font = small; g.fillStyle = 'rgba(190, 210, 235, 0.9)'; g.fillText(info, lx + side * 4 * dpr, it.ly + 8 * dpr); }
+        g.fillText(label, lx + side * 4 * dpr, info ? it.ly - 7 * dpr : it.ly, textLimit);
+        if (info) { g.font = small; g.fillStyle = 'rgba(190, 210, 235, 0.9)'; g.fillText(info, lx + side * 4 * dpr, it.ly + 8 * dpr, textLimit); }
       }
     }
     g.globalAlpha = 1;
@@ -561,14 +593,14 @@ class App {
     this.tabs = {}; this.chips = [];
     for (const c of CATEGORIES) {
       const b = document.createElement('button');
-      b.className = 'tab'; b.textContent = `${c} · ${CATALOG.filter((d) => d.category === c).length}`; b.dataset.cat = c;
+      b.className = 'tab'; b.textContent = `${content(c)} · ${CATALOG.filter((d) => d.category === c).length}`; b.dataset.cat = c;
       b.addEventListener('click', () => this.showCategory(c));
       tabs.appendChild(b); this.tabs[c] = b;
     }
     CATALOG.forEach((d, i) => {
       const b = document.createElement('button');
       b.className = 'chip'; b.dataset.index = i; b.dataset.cat = d.category;
-      b.innerHTML = `<i style="color:${rgbCss(d.color)};background:${rgbCss(d.color)}"></i>${d.name}`;
+      b.innerHTML = `<i style="color:${rgbCss(d.color)};background:${rgbCss(d.color)}"></i><span>${escapeHTML(content(d.name))}</span>`;
       b.addEventListener('click', () => this.selectModel(i));
       chips.appendChild(b); this.chips[i] = b;
     });
@@ -582,13 +614,13 @@ class App {
 
   guideItems(machine) {
     return [
-      ['snap', '🫰', '<b>Snap</b> — summon particles / dissolve'],
-      ['fist', '✊', machine ? '<b>Fist</b> — put it together' : '<b>Fist</b> — form the wonder'],
-      ['open', '✋', machine ? '<b>Open slowly</b> — explode it, see inside' : '<b>Open hand</b> — morph to the next wonder'],
-      ['twist', '🔄', '<b>Twist / raise hand</b> — rotate & tilt it'],
-      ...(machine ? [['point', '☝', '<b>Point</b> at a part to learn it · <b>pinch</b> 🤏 pulls it out']] : []),
-      ['zoom', '🙌', '<b>Two hands</b> apart / together — zoom'],
-      ['peace', '✌', '<b>Peace</b> — jump to the next model'],
+      ['snap', '🫰', html('guide.snap')],
+      ['fist', '✊', machine ? html('guide.fistMachine') : html('guide.fistWonder')],
+      ['open', '✋', machine ? html('guide.openMachine') : html('guide.openWonder')],
+      ['twist', '🔄', html('guide.twist')],
+      ...(machine ? [['point', '☝', html('guide.point')]] : []),
+      ['zoom', '🙌', html('guide.zoom')],
+      ['peace', '✌', html('guide.peace')],
     ];
   }
 
@@ -603,18 +635,18 @@ class App {
     const isM = isMachine(st.index);
     if (this.lastIndexShown !== st.index) {
       this.lastIndexShown = st.index;
-      $('cat').textContent = def.category; $('name').textContent = def.name; $('fact').textContent = def.fact || '';
-      $('bigTitle').querySelector('.t').textContent = def.name; $('bigTitle').querySelector('.s').textContent = def.fact || '';
+      $('cat').textContent = content(def.category); $('name').textContent = content(def.name); $('fact').textContent = content(def.fact);
+      $('bigTitle').querySelector('.t').textContent = content(def.name); $('bigTitle').querySelector('.s').textContent = content(def.fact);
       $('explodeBox').hidden = !isM;
       this.chips.forEach((c, i) => c.classList.toggle('active', i === st.index));
       if (this.activeCat !== def.category) this.showCategory(def.category);
       this.guideKey = null;
     }
     const pill = $('statePill');
-    if (pill.dataset.state !== st.state) { pill.dataset.state = st.state; pill.textContent = st.state; }
+    pill.dataset.state = st.state; pill.textContent = tr('state.' + st.state);
     const vis = ctl.handVisible(t), pose = vis ? (ctl.pinch ? 'pinch' : ctl.pose) : NONE;
-    const [emo, label] = pose === 'pinch' ? ['🤏', 'Pinch'] : POSE_UI[pose] || POSE_UI.other;
-    const pt = `${emo} ${label}${ctl.secondVisible(t) ? ' + 🖐' : ''}`;
+    const [emo, label] = pose === 'pinch' ? ['🤏', 'pose.pinch'] : POSE_UI[pose] || POSE_UI.other;
+    const pt = `${emo} ${tr(label)}${ctl.secondVisible(t) ? ' + 🖐' : ''}`;
     if ($('posePill').textContent !== pt) $('posePill').textContent = pt;
     const op = vis ? ctl.openness : 0;
     $('openBar').style.width = `${Math.round(op * 100)}%`; $('openPct').textContent = `${Math.round(op * 100)}%`;
@@ -633,32 +665,33 @@ class App {
     if (L && card.dataset.key !== `${st.index}:${this.sel}`) {
       card.dataset.key = `${st.index}:${this.sel}`;
       card.querySelector('.swatch').style.background = rgbCss(L.color);
-      card.querySelector('.pname').textContent = L.label;
-      card.querySelector('.pinfo').textContent = L.info;
-      card.querySelector('.pmodel').textContent = `${def.name} · part ${this.sel + 1} of ${this.model.labels.length}`;
+      card.querySelector('.pname').textContent = content(L.label);
+      card.querySelector('.pinfo').textContent = content(L.info);
+      card.querySelector('.pmodel').textContent = tr('part.position', { name: content(def.name), index: this.sel + 1, total: this.model.labels.length });
     }
     card.classList.toggle('pulled', this.pulled);
+    $('partPull').textContent = tr(this.pulled ? 'part.putBack' : 'part.pull');
     // quiz banner
     const qb = $('quiz'), q = this.quiz;
     qb.hidden = !q;
     if (q) {
       const target = q.target >= 0 && this.model?.labels[q.target];
-      qb.querySelector('.q').textContent = q.done ? '🎓 Quiz finished' : target ? `🎓 Find: ${target.label}` : '🎓 Get ready…';
-      qb.querySelector('.qs').textContent = `question ${Math.max(q.asked, 1)} / ${q.total} · score ${q.score}`;
-      qb.querySelector('.qf').textContent = q.feedback || 'point at it with one finger (or click it)';
+      qb.querySelector('.q').textContent = q.done ? tr('quiz.finished') : target ? tr('quiz.find', { name: content(target.label) }) : tr('quiz.ready');
+      qb.querySelector('.qs').textContent = tr('quiz.progress', { asked: Math.max(q.asked, 1), total: q.total, score: q.score });
+      qb.querySelector('.qf').textContent = q.feedback || tr('quiz.hint');
       qb.classList.toggle('good', q.feedback.startsWith('✅') || q.done);
       qb.classList.toggle('bad', q.feedback.startsWith('❌'));
     }
-    const cam = this.cam?.running ? `cam <b>${this.cam.fps.toFixed(0)}</b> fps · hands ${this.cam.delegate} ${this.cam.detectMs.toFixed(0)} ms` : 'camera off';
-    const extra = [Math.abs(this.zoom - 1) > 0.02 ? `zoom <b>${this.zoom.toFixed(2)}×</b>` : '', this.recorder.on ? `<span class="rec">● REC ${this.recorder.seconds().toFixed(0)} s</span>` : '', this.voiceOn ? '🎤 listening' : ''].filter(Boolean).join(' · ');
-    $('stats').innerHTML = `<b>${this.fps.toFixed(0)}</b> fps · <b>${(CFG.n / 1000).toFixed(0)}k</b> particles<br>${cam}${extra ? '<br>' + extra : ''}`;
+    const cam = this.cam?.running ? html('stats.camera', { fps: number(this.cam.fps), delegate: this.cam.delegate, ms: number(this.cam.detectMs) }) : tr('stats.cameraOff');
+    const extra = [Math.abs(this.zoom - 1) > 0.02 ? html('stats.zoom', { zoom: number(this.zoom, 2) }) : '', this.recorder.on ? `<span class="rec">${html('stats.record', { seconds: number(this.recorder.seconds()) })}</span>` : '', this.voiceOn ? tr('stats.listening') : ''].filter(Boolean).join(' · ');
+    $('stats').innerHTML = `${html('stats.particles', { fps: number(this.fps), count: number(CFG.n / 1000) })}<br>${cam}${extra ? '<br>' + extra : ''}`;
     for (const e of st.events.splice(0)) {
-      const name = CATALOG[st.index].name;
-      if (e === 'snap') this.toast('🫰 Snap! Particles summoned');
-      else if (e === 'form') this.toast(isM ? `✊ Assembling: ${name}` : `✊ Forming ${name}`);
-      else if (e === 'next') this.toast(`✌ Next: ${name}`);
+      const name = content(CATALOG[st.index].name);
+      if (e === 'snap') this.toast(tr('event.snap'));
+      else if (e === 'form') this.toast(isM ? tr('event.assemble', { name }) : tr('event.form', { name }));
+      else if (e === 'next') this.toast(tr('event.next', { name }));
       else if (e === 'select') this.toast(`→ ${name}`);
-      else if (e === 'dissolve') this.toast('💥 Dissolved');
+      else if (e === 'dissolve') this.toast(tr('event.dissolve'));
     }
   }
 
@@ -676,7 +709,7 @@ class App {
     const $ = this.$, ctl = this.ctl;
     const now = () => this.t;
     addEventListener('keydown', (e) => {
-      if (e.target instanceof HTMLInputElement && e.target.type !== 'range') return;
+      if (e.target instanceof HTMLSelectElement || e.target instanceof HTMLTextAreaElement || e.target.isContentEditable || (e.target instanceof HTMLInputElement && e.target.type !== 'range')) return;
       const k = e.key.toLowerCase(), st = ctl.state;
       if (k !== 'd') this.stopDemo();
       if (k === ' ') { e.preventDefault(); ctl.keySnap(now()); }
@@ -700,7 +733,7 @@ class App {
       else if (k === 'i') this.voiceCommand('what is this');
       else if (k === 'escape') { if (this.quiz) this.stopQuiz(); this.deselect(); }
       else if (k === 'r') this.toggle('autoRotate', 'bRotate');
-      else if (k === 'g') { this.toggle('handRotate', 'bHandRot'); this.toast(`🔄 Hand rotation ${this.handRotate ? 'on' : 'off'}`); }
+      else if (k === 'g') { this.toggle('handRotate', 'bHandRot'); this.toast(tr('rotate.status', { state: tr(this.handRotate ? 'common.on' : 'common.off') })); }
       else if (k === 'l') this.toggle('labelsOn', 'bLabels');
       else if (k === 't') this.trails = !this.trails;
       else if (k === 'c') this.toggleCamera();
@@ -727,7 +760,7 @@ class App {
     $('bHelp').onclick = () => { $('help').hidden = !$('help').hidden; };
     $('partClose').onclick = () => this.deselect();
     $('partPull').onclick = () => { if (this.sel >= 0) this.pulled = !this.pulled; };
-    $('partSpeak').onclick = () => { const L = this.model?.labels[this.sel]; if (L) { this.spoken.push(`${L.label}. ${L.info}.`); speak(`${L.label}. ${L.info}.`); } };
+    $('partSpeak').onclick = () => { const L = this.model?.labels[this.sel]; if (L) { this.spoken.push(`${content(L.label)}. ${content(L.info)}.`); speak(`${content(L.label)}. ${content(L.info)}.`, speechLocale()); } };
     $('quizStop').onclick = () => this.stopQuiz();
     const slider = $('explodeSlider');
     slider.addEventListener('input', () => { this.sliderActive = true; this.manualExplode = slider.value / 100; });
@@ -762,23 +795,27 @@ class App {
     const msg = this.$('startMsg');
     try {
       this.cam = this.cam || new HandCamera(this.video);
-      await this.cam.start((s) => { msg.textContent = s; if (s) this.toast(s); });
+      await this.cam.start((s) => {
+        const key = { 'Requesting camera…': 'camera.requesting', 'Loading hand tracker…': 'camera.loading' }[s];
+        this.startMessage = key ? { key, params: {} } : null;
+        msg.textContent = key ? tr(key) : s; if (s) this.toast(msg.textContent);
+      });
       this.camOn = true; this.$('bCam').classList.add('on');
-      this.toast('📷 Camera on — snap your fingers!');
+      this.toast(tr('camera.on'));
       return true;
     } catch (e) {
       console.error(e);
-      const text = e.name === 'NotAllowedError' ? 'Camera permission was denied — you can still use the keyboard, mouse and demo.'
-        : e.name === 'NotFoundError' ? 'No camera found — you can still use the keyboard, mouse and demo.' : `Camera error: ${e.message}`;
-      msg.textContent = text; this.toast(text);
+      const key = e.name === 'NotAllowedError' ? 'camera.denied' : e.name === 'NotFoundError' ? 'camera.missing' : 'camera.error';
+      this.startMessage = { key, params: { error: e.message?.includes('getUserMedia missing') ? tr('camera.insecure') : content(e.message) } };
+      msg.textContent = tr(key, this.startMessage.params); this.toast(msg.textContent);
       this.cam?.stop(); this.cam = null; this.camOn = false;
       return false;
     }
   }
-  stopCamera() { this.cam?.stop(); this.cam = null; this.camOn = false; this.hasVideo = false; this.$('bCam').classList.remove('on'); this.toast('Camera off'); }
+  stopCamera() { this.cam?.stop(); this.cam = null; this.camOn = false; this.hasVideo = false; this.$('bCam').classList.remove('on'); this.toast(tr('camera.off')); }
   toggleCamera() { if (this.camOn) this.stopCamera(); else this.startCamera(); }
 
-  toggleDemo() { if (this.demo) this.stopDemo(); else { this.demo = new Demo(this); this.$('bDemo').classList.add('on'); this.toast('▶ Demo — synthetic hand'); } }
+  toggleDemo() { if (this.demo) this.stopDemo(); else { this.demo = new Demo(this); this.$('bDemo').classList.add('on'); this.toast(tr('demo.start')); } }
   stopDemo() { if (!this.demo) return; this.demo = null; this.demoHand = undefined; this.$('bDemo').classList.remove('on'); this.ctl.onHands([], this.t); }
 
   // ------------------------------------------------------------ deterministic stepping (tests)
@@ -800,23 +837,26 @@ class App {
 
 // ---------------------------------------------------------------- boot
 function boot() {
+  initI18n();
   let app;
   try { app = new App(); }
   catch (e) {
     console.error(e);
-    document.getElementById('startMsg').textContent = `Cannot start: ${e.message}`;
+    const showError = () => { document.getElementById('startMsg').textContent = tr('start.error', { error: content(e.message) }); };
+    showError(); onLocaleChange(showError);
     document.getElementById('bStartCam').disabled = true; document.getElementById('bStartNoCam').disabled = true;
     return;
   }
   const start = document.getElementById('start');
   const hideStart = () => { start.hidden = true; };
   document.getElementById('bStartCam').onclick = async () => { if (await app.startCamera()) hideStart(); };
-  document.getElementById('bStartNoCam').onclick = () => { hideStart(); app.toast('Keyboard: Space = snap · F = fist · O = open · E = explode · D = demo · H = help'); };
+  document.getElementById('bStartNoCam').onclick = () => { hideStart(); app.toast(tr('start.keyboard')); };
   if (CFG.autostart === 'camera') { hideStart(); app.startCamera(); }
   else if (CFG.autostart === 'nocamera' || CFG.manual) hideStart();
 
   window.wonderSnap = {
     app, CATALOG, CFG, synth: synthHand,
+    getLocale, setLocale,
     ready: () => app.store.request(app.ctl.state.index),
     advance: (s, hand, hand2) => app.advance(s, hand, hand2),
     clearHand: () => { app.handSource = null; app.handSource2 = null; },
@@ -865,3 +905,4 @@ function boot() {
   }
 }
 boot();
+

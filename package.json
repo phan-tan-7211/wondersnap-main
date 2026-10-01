@@ -9,9 +9,16 @@
   "scripts": {
     "start": "node server.mjs",
     "test": "playwright test",
-    "test:report": "playwright show-report"
+    "test:report": "playwright show-report",
+    "test:i18n": "node --test tests/i18n/*.node.mjs"
   },
-  "keywords": ["mediapipe", "webgl2", "particles", "hand-tracking", "gestures"],
+  "keywords": [
+    "mediapipe",
+    "webgl2",
+    "particles",
+    "hand-tracking",
+    "gestures"
+  ],
   "license": "MIT",
   "dependencies": {
     "@mediapipe/tasks-vision": "^1.0.1"

@@ -1,0 +1,16 @@
+/* Vietnamese copy and keyboard-accessible language controls. */
+.language-picker { display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; color: #e8f1ff; font: 500 12px/1.5 system-ui, sans-serif; }
+.language-picker select { color: #e8f1ff; background: #142038; border: 1px solid #526581; border-radius: 8px; padding: 5px 8px; font: inherit; cursor: pointer; }
+.language-picker select:focus-visible { outline: 2px solid #66e0ff; outline-offset: 3px; }
+.top-right > .language-picker { align-self: flex-end; }
+.start-card > .language-picker { display: flex; margin-bottom: 8px; }
+html[lang="vi"] .buttons button { white-space: normal; }
+html[lang="vi"] .brand-sub { letter-spacing: normal; }
+.help { top: 208px; max-height: calc(100dvh - 240px); overflow-y: auto; }
+.start-card { max-height: calc(100dvh - 32px); overflow-y: auto; }
+@media (max-width: 600px) {
+  .language-picker { font-size: 11px; }
+  .start-card { padding: 20px; }
+  .top-right > .language-picker > span { display: none; }
+  .language-picker select { max-width: 130px; }
+}

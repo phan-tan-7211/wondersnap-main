@@ -15,7 +15,9 @@ export function watchErrors(page) {
 
 /** Open the app in manual-clock mode (frames only advance through wonderSnap.advance). */
 export async function openApp(page, query = '') {
-  await page.goto(`/?manual=1&dpr=1&${query}`);
+  const params = new URLSearchParams(query);
+  if (!params.has('lang')) params.set('lang', 'en'); // Legacy English UI assertions remain explicit.
+  await page.goto(`/?manual=1&dpr=1&${params}`);
   await page.waitForFunction(() => window.wonderSnap);
   await page.evaluate(() => window.wonderSnap.ready());
   await page.evaluate(() => window.wonderSnap.advance(1 / 60, null));
